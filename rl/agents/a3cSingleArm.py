@@ -390,6 +390,7 @@ class A3CEvaluator(a3cSingleArm):
             eval_episode_reward += self.experience.reward
             eval_step += 1
             #print(eval_step)
+            #print(self.master.eval_steps)
 
             if eval_should_start_new:
                 eval_nepisodes += 1

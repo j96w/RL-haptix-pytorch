@@ -203,13 +203,13 @@ class AgentParams(Params):  # hyperparameters for drl agents
         elif self.agent_type == "a3c" and self.env_type == "atari-ram" or \
              self.agent_type == "a3c" and self.env_type == "atari" or \
              self.agent_type == "a3c" and self.env_type == "arm":
-            self.steps               = 20000000 # max #iterations
+            self.steps               = 200000 # max #iterations
             self.early_stop          = None     # max #steps per episode
             self.gamma               = 0.99
             self.clip_grad           = 40.
             self.lr                  = 0.0001
             self.eval_freq           = 60       # NOTE: here means every this many seconds
-            self.eval_steps          = 3000
+            self.eval_steps          = 100
             self.prog_freq           = self.eval_freq
             self.test_nepisodes      = 1
 

@@ -367,6 +367,7 @@ class ArmEnv(Env):
         pr = Process(target = Armreset, args = (self.q, self.ind))
         pr.start()
         pr.join()
+        pr.terminate()
 
         self.exp_state1 = []
         for i in range(0, 19):
@@ -388,11 +389,13 @@ class ArmEnv(Env):
             Trepos = q.get()
             #print(q.empty())
 
-            so.l_finger1(byref((c_float)(Onepos)))
-            so.l_finger2down(byref((c_float)(Twopos)))
-            so.l_finger3down(byref((c_float)(Twopos)))
-            so.l_finger4down(byref((c_float)(Twopos)))
-            so.l_finger5down(byref((c_float)(Trepos)))
+            s1 = so.l_finger1(byref((c_float)(Onepos)))
+            s2 = so.l_finger2down(byref((c_float)(Twopos)))
+            s3 = so.l_finger3down(byref((c_float)(Twopos)))
+            s4 = so.l_finger4down(byref((c_float)(Twopos)))
+            s5 = so.l_finger5down(byref((c_float)(Trepos)))
+
+            #print(i, s1, s2, s3, s4, s5, Onepos, Twopos, Trepos)
 
             reward1 = so.l_forceget0()+ so.l_forceget1()
             reward2 = so.l_forceget7()+ so.l_forceget8()+ so.l_forceget9()+ so.l_forceget10()+ so.l_forceget11()+ so.l_forceget12()+ so.l_forceget13()+ so.l_forceget14()+ so.l_forceget15()
@@ -447,20 +450,20 @@ class ArmEnv(Env):
                 self.Onepos = -80
         if self.exp_action == 2:
             self.Twopos = self.Twopos + 50
-            if self.Twopos > 350:
-                self.Twopos = 350
+            if self.Twopos > 250:
+                self.Twopos = 250
         if self.exp_action == 3:
             self.Twopos = self.Twopos - 50
-            if self.Twopos < -150:
-                self.Twopos = -150
+            if self.Twopos < -100:
+                self.Twopos = -100
         if self.exp_action == 4:
             self.Trepos = self.Trepos + 50
-            if self.Trepos > 350:
-                self.Trepos = 350
+            if self.Trepos > 250:
+                self.Trepos = 250
         if self.exp_action == 5:
             self.Trepos = self.Trepos - 50
-            if self.Trepos < -150:
-                self.Trepos = -150
+            if self.Trepos < -100:
+                self.Trepos = -100
 
         self.q.put(self.Nowstep)
         self.q.put(self.Onepos)
@@ -470,6 +473,7 @@ class ArmEnv(Env):
         ps = Process(target = Armstep, args = (self.q, self.ind))
         ps.start()
         ps.join()
+        ps.terminate()
 
         self.exp_reward = self.q.get()
         self.exp_state1 = []
