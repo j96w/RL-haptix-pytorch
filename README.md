@@ -2,8 +2,9 @@
 
 ## Need to install:
 - gazebo&haptix:
-> *```wget -O /tmp/haptix_gazebo_install.sh http://osrf-distributions.s3.amazonaws.com/haptix/haptix_gazebo_install.sh; sudo sh /tmp/haptix_gazebo_install.sh```
-> *```wget -O /tmp/haptix_sdk_install.sh http://osrf-distributions.s3.amazonaws.com/haptix/haptix_sdk_install.sh; sudo sh /tmp/haptix_sdk_install.sh```
+> ```wget -O /tmp/haptix_gazebo_install.sh http://osrf-distributions.s3.amazonaws.com/haptix/haptix_gazebo_install.sh; sudo sh /tmp/haptix_gazebo_install.sh```
+
+> ```wget -O /tmp/haptix_sdk_install.sh http://osrf-distributions.s3.amazonaws.com/haptix/haptix_sdk_install.sh; sudo sh /tmp/haptix_sdk_install.sh```
 
 - Python 2.7
 - [PyTorch](http://pytorch.org/)
