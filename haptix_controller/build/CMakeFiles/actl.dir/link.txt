@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC  -I/usr/include   -shared -Wl,-soname,libactl.so -o libactl.so CMakeFiles/actl.dir/hx_ctl.c.o -lhaptix-comm -Wl,-Bstatic -lhaptix-msgs -Wl,-Bdynamic -lm 

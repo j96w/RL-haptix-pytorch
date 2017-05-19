@@ -1,0 +1,1 @@
+/usr/bin/cc   -I/usr/include    CMakeFiles/hx_controller.dir/hx_controller.c.o  -o hx_controller -rdynamic -lhaptix-comm -Wl,-Bstatic -lhaptix-msgs -Wl,-Bdynamic -lm 

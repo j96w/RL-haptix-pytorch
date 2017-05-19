@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/jeremywang/haptix_controller/hx_controller.c
+windows.h
+-
+math.h
+-
+signal.h
+-
+stdio.h
+-
+time.h
+-
+haptix/comm/haptix.h
+-
+windows.h
+-
+

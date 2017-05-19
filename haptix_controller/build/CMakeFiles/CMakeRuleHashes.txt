@@ -1,0 +1,6 @@
+# Hashes of file build rules.
+20437387e8ff93b7a60602399e9d55c7 luajit-2.0.1/src/project_luajit-stamp/project_luajit-configure
+4b5a5050cb961b3d91950e5cee9a896a luajit-2.0.1/src/project_luajit-stamp/project_luajit-download
+d31ea3e0b33218af53cd082927052803 luajit-2.0.1/src/project_luajit-stamp/project_luajit-mkdir
+3d799a0212a5d5dc2ddd314493ac9565 luajit-2.0.1/src/project_luajit-stamp/project_luajit-patch
+69f78406d2f09d164126d397ca3f3b55 luajit-2.0.1/src/project_luajit-stamp/project_luajit-update

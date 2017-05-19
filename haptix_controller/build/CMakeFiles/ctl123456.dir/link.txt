@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC  -I/usr/include   -shared -Wl,-soname,libctl123456.so -o libctl123456.so CMakeFiles/ctl123456.dir/hx_ctl.c.o -lhaptix-comm -Wl,-Bstatic -lhaptix-msgs -Wl,-Bdynamic -lm -llua5.1 -lm -llua5.1 
