@@ -56,7 +56,7 @@ class Params(object):   # NOTE: shared across all modules
             self.dtype              = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
         elif self.agent_type == "a3c":
             self.enable_lstm        = False
-            self.num_processes      = 3
+            self.num_processes      = 1
 
             self.hist_len           = 1
             self.hidden_dim         = 6
@@ -110,7 +110,7 @@ class EnvParams(Params):    # settings for simulation environment
             pass
         elif self.env_type == "arm":
             self.hei_state = 1
-            self.wid_state = 19
+            self.wid_state = 6
             self.preprocess_mode = 0
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | arm"
@@ -208,7 +208,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.gamma               = 0.99
             self.clip_grad           = 40.
             self.lr                  = 0.0001
-            self.eval_freq           = 60       # NOTE: here means every this many seconds
+            self.eval_freq           = 600       # NOTE: here means every this many seconds
             self.eval_steps          = 100
             self.prog_freq           = self.eval_freq
             self.test_nepisodes      = 1

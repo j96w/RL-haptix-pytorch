@@ -283,7 +283,7 @@ class ArmModel(Model):
         super(ArmModel, self).__init__(args)
         # build model
         # 0. feature layers
-        self.l1 = nn.Linear(19, 6)
+        self.l1 = nn.Linear(6, 6)
         self.rl1 = nn.ReLU()
         if self.enable_lstm:
             self.lstm  = nn.LSTMCell(3*3*32, self.hidden_dim, 1)

@@ -9,6 +9,7 @@ import os, time, random
 import subprocess
 import ctypes
 import sys    
+import math
 from time import sleep
 
 from utils.helpers import Experience            # NOTE: here state0 is always "None"
@@ -323,44 +324,30 @@ class ArmEnv(Env):
 
             so.l_armstart()
 
-            Onepos = q.get()
-            Twopos = q.get()
-            Trepos = q.get()
+            for tt in range(0, 20):
+                so.l_up()
+            for tt in range(0, 20):
+                so.l_out()
+            for tt in range(0, 20):
+                so.l_right()
 
             #print(q.empty())
 
-            so.l_fingerdown(byref((c_float)(Onepos)), byref((c_float)(Twopos)), byref((c_float)(Trepos)))
+            #so.l_fingerdown(byref((c_float)(Onepos)), byref((c_float)(Twopos)), byref((c_float)(Trepos)))
 
-            q.put(so.l_forceget0())
-            q.put(so.l_forceget1())
-            q.put(so.l_forceget2())
-            q.put(so.l_forceget3())
-            q.put(so.l_forceget4())
-            q.put(so.l_forceget5())
-            q.put(so.l_forceget6())
-            q.put(so.l_forceget7())
-            q.put(so.l_forceget8())
-            q.put(so.l_forceget9())
-            q.put(so.l_forceget10())
-            q.put(so.l_forceget11())
-            q.put(so.l_forceget12())
-            q.put(so.l_forceget13())
-            q.put(so.l_forceget14())
-            q.put(so.l_forceget15())
-            q.put(so.l_forceget16())
-            q.put(so.l_forceget17())
-            q.put(so.l_forceget18())
+            so.getHandlocation()
+            so.getWoodlocation()
+
+            q.put(so.getHandlocationX())
+            q.put(so.getHandlocationY())
+            q.put(so.getHandlocationZ())
+            q.put(so.getWoodlocationX())
+            q.put(so.getWoodlocationY())
+            q.put(so.getWoodlocationZ())
             sleep(10)
 
         self._reset_experience()
-        self.Onepos = 0.0
-        self.Twopos = 0.0
-        self.Trepos = 0.0
         self.Nowstep = 0
-
-        self.q.put(self.Onepos)
-        self.q.put(self.Twopos)
-        self.q.put(self.Trepos)
 
         pr = Process(target = Armreset, args = (self.q, self.ind, self.so))
         pr.start()
@@ -369,7 +356,7 @@ class ArmEnv(Env):
         pr.join()
 
         self.exp_state1 = []
-        for i in range(0, 19):
+        for i in range(0, 6):
             self.exp_state1.append(self.q.get())
         #print(self.q.empty())
         return self._get_experience()
@@ -383,65 +370,36 @@ class ArmEnv(Env):
 
             so.l_armstart()
 
-            Nowstep = q.get()
-            Onepos = q.get()
-            Twopos = q.get()
-            Trepos = q.get()
+            todo = q.get()
 
-            so.l_fingerdown(byref((c_float)(Onepos)), byref((c_float)(Twopos)), byref((c_float)(Trepos)))
+            if todo == 0:
+                so.l_up()
+            if todo == 1:
+                so.l_down()
+            if todo == 2:
+                so.l_left()
+            if todo == 3:
+                so.l_right()
+            if todo == 4:
+                so.l_in()
+            if todo == 5:
+                so.l_out()
 
-            q.put(so.l_forceget0())
-            q.put(so.l_forceget1())
-            q.put(so.l_forceget2())
-            q.put(so.l_forceget3())
-            q.put(so.l_forceget4())
-            q.put(so.l_forceget5())
-            q.put(so.l_forceget6())
-            q.put(so.l_forceget7())
-            q.put(so.l_forceget8())
-            q.put(so.l_forceget9())
-            q.put(so.l_forceget10())
-            q.put(so.l_forceget11())
-            q.put(so.l_forceget12())
-            q.put(so.l_forceget13())
-            q.put(so.l_forceget14())
-            q.put(so.l_forceget15())
-            q.put(so.l_forceget16())
-            q.put(so.l_forceget17())
-            q.put(so.l_forceget18())
+            #so.l_fingerdown(byref((c_float)(Onepos)), byref((c_float)(Twopos)), byref((c_float)(Trepos)))
+            so.getHandlocation()
+            so.getWoodlocation()
 
+            q.put(so.getHandlocationX())
+            q.put(so.getHandlocationY())
+            q.put(so.getHandlocationZ())
+            q.put(so.getWoodlocationX())
+            q.put(so.getWoodlocationY())
+            q.put(so.getWoodlocationZ())
+            
         self.Nowstep = self.Nowstep + 1
         self.exp_action = action_index
 
-        if self.exp_action == 0:
-            self.Onepos = self.Onepos + 10
-            if self.Onepos > 100:
-                self.Onepos = 100
-        if self.exp_action == 1:
-            self.Onepos = self.Onepos - 10
-            if self.Onepos < -80:
-                self.Onepos = -80
-        if self.exp_action == 2:
-            self.Twopos = self.Twopos + 50
-            if self.Twopos > 250:
-                self.Twopos = 250
-        if self.exp_action == 3:
-            self.Twopos = self.Twopos - 50
-            if self.Twopos < -100:
-                self.Twopos = -100
-        if self.exp_action == 4:
-            self.Trepos = self.Trepos + 50
-            if self.Trepos > 250:
-                self.Trepos = 250
-        if self.exp_action == 5:
-            self.Trepos = self.Trepos - 50
-            if self.Trepos < -100:
-                self.Trepos = -100
-
-        self.q.put(self.Nowstep)
-        self.q.put(self.Onepos)
-        self.q.put(self.Twopos)
-        self.q.put(self.Trepos)
+        self.q.put(self.exp_action)
 
         ps = Process(target = Armstep, args = (self.q, self.ind, self.so))
         ps.start()
@@ -452,22 +410,16 @@ class ArmEnv(Env):
 
 
         self.exp_state1 = []
-        for i in range(0, 19):
+        for i in range(0, 6):
             self.exp_state1.append(self.q.get())
 
         #print(self.q.empty())
-        reward1 = self.exp_state1[0]+ self.exp_state1[1]
-        reward2 = self.exp_state1[7]+ self.exp_state1[8]+ self.exp_state1[9]+ self.exp_state1[10]+ self.exp_state1[11]+ self.exp_state1[12]+ self.exp_state1[13]+ self.exp_state1[14]+ self.exp_state1[15]
-        reward3 = self.exp_state1[4]+ self.exp_state1[5]+ self.exp_state1[6]+ self.exp_state1[16]+ self.exp_state1[17]+ self.exp_state1[18]
-        
-        #print(reward1, reward2, reward3)
-        reward = (reward1 * 0.1 + reward2 * 0.4 + reward3 * 0.5) * 15
-        if reward1 == 0:
-            reward = reward + self.Onepos - 10
-        if reward2 == 0:
-            reward = reward + self.Twopos - 10
-        if reward3 == 0:
-            reward = reward + self.Trepos - 10
+        reward1 = abs(self.exp_state1[0] - self.exp_state1[3])
+        reward2 = abs(self.exp_state1[1] - self.exp_state1[4])
+        reward3 = abs(self.exp_state1[2] - self.exp_state1[5])
+        reward = 10000 / (1 + reward1 + reward2 + reward3)
+        #print(self.exp_state1[0], self.exp_state1[1], self.exp_state1[2], self.exp_state1[3], self.exp_state1[4], self.exp_state1[5])
+        #print(reward)
 
         self.exp_reward = reward
 
