@@ -10,6 +10,7 @@
 - [PyTorch](http://pytorch.org/)
 - [Visdom](https://github.com/facebookresearch/visdom)
 - [OpenAI Gym](https://github.com/openai/gym)
+- [OpenCV](https://sourceforge.net/projects/opencvlibrary/files/)
 
 ## How to run:
 * Config:
