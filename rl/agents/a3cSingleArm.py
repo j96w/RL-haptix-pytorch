@@ -212,6 +212,7 @@ class A3CLearner(a3cSingleArm):
             #print(self.experience.state1)
             action, p_vb, v_vb = self._forward(Variable(self._preprocessState(self.experience.state1)))
             # then execute action in env to get a new experience.state1 -> rollout.state1
+            #print("learner", "", action)
             self.experience = self.env.step(action)
             # push experience into rollout
             self.rollout.action.append(action)
@@ -291,7 +292,7 @@ class A3CEvaluator(a3cSingleArm):
         print("Evaluator", process_id)
         super(A3CEvaluator, self).__init__(master, process_id)
 
-        self.training = False   # choose actions w/ max probability
+        self.training = True   # choose actions w/ max probability
         self._reset_loggings()
 
         self.start_time = time.time()
@@ -376,7 +377,8 @@ class A3CEvaluator(a3cSingleArm):
                 # NOTE: not necessary here in evaluation but we do it anyways
                 self._reset_lstm_hidden_vb_rollout()
             # Run a single step
-            eval_action, p_vb, v_vb = self._forward(Variable(self._preprocessState(self.experience.state1), volatile=True))
+            eval_action, p_vb, v_vb = self._forward(Variable(self._preprocessState(self.experience.state1)))
+            #print("eval", eval_action)
             self.experience = self.env.step(eval_action)
             if not self.training:
                 if self.master.visualize: self.env.visual()

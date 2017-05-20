@@ -360,6 +360,7 @@ class A3CEvaluator(A3CSingleProcess):
                 self._reset_lstm_hidden_vb_rollout()
             # Run a single step
             eval_action, p_vb, v_vb = self._forward(Variable(self._preprocessState(self.experience.state1), volatile=True))
+            print(eval_action)
             self.experience = self.env.step(eval_action)
             if not self.training:
                 if self.master.visualize: self.env.visual()

@@ -11,10 +11,8 @@ class A3CAgent(Agent):
         self.logger.warning("<===================================> A3C-Master {Env(dummy) & Model}")
 
         # dummy_env just to get state_shape & action_dim
-        self.dummy_env   = self.env_prototype(self.env_params, self.num_processes, 1)
-        self.state_shape = self.dummy_env.state_shape
-        self.action_dim  = self.dummy_env.action_dim
-        del self.dummy_env
+        self.state_shape = 1
+        self.action_dim  = 6
 
         # global shared model
         self.model_params.state_shape = self.state_shape

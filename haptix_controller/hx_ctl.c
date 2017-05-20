@@ -95,6 +95,7 @@ int l_handDown(double angle)
     if(update() < 0)
     {
       printf("update failed\n");
+      return -1;
     }
     return 0;
 }
@@ -114,6 +115,7 @@ int l_handRotate(double angle)
     if(update() < 0)
     {
       printf("update failed\n");
+      return -1;
     }
     return 0;
 }
@@ -133,6 +135,7 @@ int l_handTurn(double angle)
     if(update() < 0)
     {
       printf("update failed\n");
+      return -1;
     }
     return 0;
 }
@@ -159,6 +162,7 @@ int l_finger1(double angle)
     if(update() < 0)
     {
       printf("update failed\n");
+      return -1;
     }
     return 0;
 }
@@ -179,6 +183,7 @@ int l_finger2down(double angle)
     if(update() < 0)
     {
       printf("update failed\n");
+      return -1;
     }
     return 0;
 }
@@ -198,6 +203,7 @@ int l_finger3down(double angle)
     if(update() < 0)
     {
       printf("update failed\n");
+      return -1;
     }
     return 0;
 }
@@ -217,18 +223,23 @@ int l_finger4down(double angle)
     if(update() < 0)
     {
       printf("update failed\n");
+      return -1;
     }
     return 0;
 }
 
-int l_finger5down(double angle)
+int l_fingerdown(double angle1, double angle2, double angle3)
 {
     int i;
+    cmd.ref_pos[3] = 150;
+    cmd.ref_pos[4] = angle1;
+    cmd.ref_pos[5] = angle1;
+    cmd.ref_pos[8] = angle2;
+    cmd.ref_pos[9] = angle2;
+    cmd.ref_pos[10] = angle2;
+    cmd.ref_pos[12] = angle3;
     for (i = 0; i < robotInfo.motor_count; ++i)
     {
-	if(i == 12){
-		cmd.ref_pos[i] = angle;
-	}
 	cmd.ref_vel[i] = 1.0;
     }
     cmd.ref_vel_enabled = 1;
@@ -236,6 +247,7 @@ int l_finger5down(double angle)
     if(update() < 0)
     {
       printf("update failed\n");
+      return -1;
     }
     return 0;
 }

@@ -171,6 +171,7 @@ int l_finger3down(double angle)
     if(update() < 0)
     {
       printf("update failed\n");
+      return -1;
     }
     return 1;
 }

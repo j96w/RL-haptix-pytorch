@@ -265,6 +265,8 @@ class ArmEnv(Env):
 
             subprocess.Popen(['gazebo', 'worlds/arat.world'], env = new_arm_env)
             sleep(10)
+
+            self.so = ctypes.CDLL(self.root_dir + '/libarmctl.so')
         #assert self.env_type == "arm"
 
         #self.env = gym.make(self.game)
@@ -316,10 +318,9 @@ class ArmEnv(Env):
         return random.randint(0, 5)
 
     def reset(self):
-        def Armreset(q, i):
+        def Armreset(q, i, so):
             os.environ['IGN_PARTITION'] = 'arm' + str(i)
 
-            so = ctypes.CDLL(self.root_dir + '/libarmctl.so')
             so.l_armstart()
 
             Onepos = q.get()
@@ -328,11 +329,7 @@ class ArmEnv(Env):
 
             #print(q.empty())
 
-            so.l_finger1(byref((c_float)(Onepos)))
-            so.l_finger2down(byref((c_float)(Twopos)))
-            so.l_finger3down(byref((c_float)(Twopos)))
-            so.l_finger4down(byref((c_float)(Twopos)))
-            so.l_finger5down(byref((c_float)(Trepos)))
+            so.l_fingerdown(byref((c_float)(Onepos)), byref((c_float)(Twopos)), byref((c_float)(Trepos)))
 
             q.put(so.l_forceget0())
             q.put(so.l_forceget1())
@@ -359,15 +356,17 @@ class ArmEnv(Env):
         self.Onepos = 0.0
         self.Twopos = 0.0
         self.Trepos = 0.0
+        self.Nowstep = 0
 
         self.q.put(self.Onepos)
         self.q.put(self.Twopos)
         self.q.put(self.Trepos)
 
-        pr = Process(target = Armreset, args = (self.q, self.ind))
+        pr = Process(target = Armreset, args = (self.q, self.ind, self.so))
         pr.start()
         pr.join()
         pr.terminate()
+        pr.join()
 
         self.exp_state1 = []
         for i in range(0, 19):
@@ -377,44 +376,20 @@ class ArmEnv(Env):
 
 
     def step(self, action_index):
-        def Armstep(q, i):
+        #print(self.ind, action_index)
+        def Armstep(q, i, so):
             #print(i)
             os.environ['IGN_PARTITION'] = 'arm' + str(i)
-            so = ctypes.CDLL(self.root_dir + '/libarmctl.so')
+
             so.l_armstart()
 
             Nowstep = q.get()
             Onepos = q.get()
             Twopos = q.get()
             Trepos = q.get()
-            #print(q.empty())
 
-            s1 = so.l_finger1(byref((c_float)(Onepos)))
-            s2 = so.l_finger2down(byref((c_float)(Twopos)))
-            s3 = so.l_finger3down(byref((c_float)(Twopos)))
-            s4 = so.l_finger4down(byref((c_float)(Twopos)))
-            s5 = so.l_finger5down(byref((c_float)(Trepos)))
+            so.l_fingerdown(byref((c_float)(Onepos)), byref((c_float)(Twopos)), byref((c_float)(Trepos)))
 
-            #print(i, s1, s2, s3, s4, s5, Onepos, Twopos, Trepos)
-
-            reward1 = so.l_forceget0()+ so.l_forceget1()
-            reward2 = so.l_forceget7()+ so.l_forceget8()+ so.l_forceget9()+ so.l_forceget10()+ so.l_forceget11()+ so.l_forceget12()+ so.l_forceget13()+ so.l_forceget14()+ so.l_forceget15()
-            reward3 = so.l_forceget4()+ so.l_forceget5()+ so.l_forceget6()+ so.l_forceget16()+ so.l_forceget17()+ so.l_forceget18()
-            
-            #print(reward1, reward2, reward3)
-            reward = (reward1 * 0.1 + reward2 * 0.4 + reward3 * 0.5) * 15
-            if reward1 == 0:
-                reward = reward + Onepos - 10
-            if reward2 == 0:
-                reward = reward + Twopos - 10
-            if reward3 == 0:
-                reward = reward + Trepos - 10
-
-            terminal = False
-            if Nowstep > 20000:
-                terminal = True
-
-            q.put(reward)
             q.put(so.l_forceget0())
             q.put(so.l_forceget1())
             q.put(so.l_forceget2())
@@ -434,8 +409,6 @@ class ArmEnv(Env):
             q.put(so.l_forceget16())
             q.put(so.l_forceget17())
             q.put(so.l_forceget18())
-            q.put(terminal)
-
 
         self.Nowstep = self.Nowstep + 1
         self.exp_action = action_index
@@ -470,16 +443,36 @@ class ArmEnv(Env):
         self.q.put(self.Twopos)
         self.q.put(self.Trepos)
 
-        ps = Process(target = Armstep, args = (self.q, self.ind))
+        ps = Process(target = Armstep, args = (self.q, self.ind, self.so))
         ps.start()
         ps.join()
         ps.terminate()
+        ps.join()
+        #print(self.Nowstep)
 
-        self.exp_reward = self.q.get()
+
         self.exp_state1 = []
         for i in range(0, 19):
             self.exp_state1.append(self.q.get())
-        self.exp_terminal1 = self.q.get()
+
         #print(self.q.empty())
+        reward1 = self.exp_state1[0]+ self.exp_state1[1]
+        reward2 = self.exp_state1[7]+ self.exp_state1[8]+ self.exp_state1[9]+ self.exp_state1[10]+ self.exp_state1[11]+ self.exp_state1[12]+ self.exp_state1[13]+ self.exp_state1[14]+ self.exp_state1[15]
+        reward3 = self.exp_state1[4]+ self.exp_state1[5]+ self.exp_state1[6]+ self.exp_state1[16]+ self.exp_state1[17]+ self.exp_state1[18]
+        
+        #print(reward1, reward2, reward3)
+        reward = (reward1 * 0.1 + reward2 * 0.4 + reward3 * 0.5) * 15
+        if reward1 == 0:
+            reward = reward + self.Onepos - 10
+        if reward2 == 0:
+            reward = reward + self.Twopos - 10
+        if reward3 == 0:
+            reward = reward + self.Trepos - 10
+
+        self.exp_reward = reward
+
+        if self.Nowstep > 600:
+            self.exp_terminal1 = True
+
 
         return self._get_experience()
