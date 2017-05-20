@@ -456,7 +456,7 @@ class A3CTester(A3CSingleProcess):
         master.logger.warning("<===================================> A3C-Tester {Env & Model}")
         super(A3CTester, self).__init__(master, process_id)
 
-        self.training = False   # choose actions w/ max probability
+        self.training = True   # choose actions w/ max probability
         self._reset_loggings()
 
         self.start_time = time.time()
