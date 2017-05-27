@@ -28,7 +28,7 @@ class Params(object):   # NOTE: shared across all modules
 
         # training signature
         self.machine     = "jeremywang"       # "machine_id"
-        self.timestamp   = "170513"   # "yymmdd##"
+        self.timestamp   = "170527"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 6
@@ -36,7 +36,7 @@ class Params(object):   # NOTE: shared across all modules
         self.seed        = 233
         self.render      = False        # whether render the window from the original envs or not
         self.visualize   = False        # whether do online plotting and stuff or not
-        self.save_best   = False        # save model w/ highest reward if True, otherwise always save the latest model
+        self.save_best   = True        # save model w/ highest reward if True, otherwise always save the latest model
 
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
 
@@ -56,7 +56,7 @@ class Params(object):   # NOTE: shared across all modules
             self.dtype              = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
         elif self.agent_type == "a3c":
             self.enable_lstm        = False
-            self.num_processes      = 1
+            self.num_processes      = 3
 
             self.hist_len           = 1
             self.hidden_dim         = 6
@@ -208,8 +208,8 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.gamma               = 0.99
             self.clip_grad           = 40.
             self.lr                  = 0.0001
-            self.eval_freq           = 600       # NOTE: here means every this many seconds
-            self.eval_steps          = 100
+            self.eval_freq           = 1000       # NOTE: here means every this many seconds
+            self.eval_steps          = 500
             self.prog_freq           = self.eval_freq
             self.test_nepisodes      = 1
 

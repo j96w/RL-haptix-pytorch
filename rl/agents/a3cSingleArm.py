@@ -234,7 +234,6 @@ class A3CLearner(a3cSingleArm):
         # make sure processes are not completely synced by sleeping a bit
 
         #time.sleep(int(np.random.rand() * (self.process_id + 5)))
-
         nepisodes = 0
         nepisodes_solved = 0
         episode_steps = None

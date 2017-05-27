@@ -3,7 +3,7 @@ from __future__ import division
 import numpy as np
 from copy import deepcopy
 
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Value, Array
 from ctypes import cdll, c_int, byref, c_float
 import os, time, random
 import subprocess
@@ -42,9 +42,6 @@ class Env(object):
         self._reset_experience()
 
         self.Nowstep = 0
-        self.Onepos = 0
-        self.Twopos = 0
-        self.Trepos = 0
         self.q = Queue()
 
         self.logger.warning("<-----------------------------------> Env")
@@ -265,9 +262,57 @@ class ArmEnv(Env):
             new_ctrl_env['IGN_PARTITION'] = 'arm' + str(env_ind)
 
             subprocess.Popen(['gazebo', 'worlds/arat.world'], env = new_arm_env)
-            sleep(10)
+            sleep(20)
 
-            self.so = ctypes.CDLL(self.root_dir + '/libarmctl.so')
+            def armCtrl(n,a):
+                so = ctypes.CDLL(self.root_dir + '/libarmctl.so')
+                os.environ['IGN_PARTITION'] = 'arm' + str(a[0])
+                so.l_armstart()
+
+                while True:
+                    time.sleep(0.1)
+                    if n.value == 2.0:
+                        if a[1] == 0:
+                            so.l_up()
+                        if a[1] == 1:
+                            so.l_down()
+                        if a[1] == 2:
+                            so.l_left()
+                        if a[1] == 3:
+                            so.l_right()
+                        if a[1] == 4:
+                            so.l_in()
+                        if a[1] == 5:
+                            so.l_out()
+                        so.getHandlocation()
+                        so.getWoodlocation()
+
+                        a[2] = so.getHandlocationX()
+                        a[3] = so.getHandlocationY()
+                        a[4] = so.getHandlocationZ()
+                        a[5] = so.getWoodlocationX()
+                        a[6] = so.getWoodlocationY()
+                        a[7] = so.getWoodlocationZ()
+                        n.value = 1
+
+                    if n.value == 3.0:
+                        so.l_reset()
+                        so.getHandlocation()
+                        so.getWoodlocation()
+
+                        a[2] = so.getHandlocationX()
+                        a[3] = so.getHandlocationY()
+                        a[4] = so.getHandlocationZ()
+                        a[5] = so.getWoodlocationX()
+                        a[6] = so.getWoodlocationY()
+                        a[7] = so.getWoodlocationZ()
+                        n.value = 1
+
+            self.num = Value('d', 0.0)
+            self.arr = Array('i',range(10))
+            self.arr[1] = env_ind
+            p = Process(target=armCtrl, args=(self.num, self.arr))
+            p.start()
         #assert self.env_type == "arm"
 
         #self.env = gym.make(self.game)
@@ -319,112 +364,46 @@ class ArmEnv(Env):
         return random.randint(0, 5)
 
     def reset(self):
-        def Armreset(q, i, so):
-            os.environ['IGN_PARTITION'] = 'arm' + str(i)
-
-            so.l_armstart()
-
-            for tt in range(0, 20):
-                so.l_up()
-            for tt in range(0, 20):
-                so.l_out()
-            for tt in range(0, 20):
-                so.l_right()
-
-            #print(q.empty())
-
-            #so.l_fingerdown(byref((c_float)(Onepos)), byref((c_float)(Twopos)), byref((c_float)(Trepos)))
-
-            so.getHandlocation()
-            so.getWoodlocation()
-
-            q.put(so.getHandlocationX())
-            q.put(so.getHandlocationY())
-            q.put(so.getHandlocationZ())
-            q.put(so.getWoodlocationX())
-            q.put(so.getWoodlocationY())
-            q.put(so.getWoodlocationZ())
-            sleep(10)
-
         self._reset_experience()
         self.Nowstep = 0
-
-        pr = Process(target = Armreset, args = (self.q, self.ind, self.so))
-        pr.start()
-        pr.join()
-        pr.terminate()
-        pr.join()
-
+        self.num.value = 3.0
         self.exp_state1 = []
-        for i in range(0, 6):
-            self.exp_state1.append(self.q.get())
-        #print(self.q.empty())
+        while True:
+            time.sleep(0.1)
+            if self.num.value == 1.0:
+                for i in range(2, 8):
+                    self.exp_state1.append(self.arr[i])
+                break
+
         return self._get_experience()
 
 
     def step(self, action_index):
         #print(self.ind, action_index)
-        def Armstep(q, i, so):
-            #print(i)
-            os.environ['IGN_PARTITION'] = 'arm' + str(i)
-
-            so.l_armstart()
-
-            todo = q.get()
-
-            if todo == 0:
-                so.l_up()
-            if todo == 1:
-                so.l_down()
-            if todo == 2:
-                so.l_left()
-            if todo == 3:
-                so.l_right()
-            if todo == 4:
-                so.l_in()
-            if todo == 5:
-                so.l_out()
-
-            #so.l_fingerdown(byref((c_float)(Onepos)), byref((c_float)(Twopos)), byref((c_float)(Trepos)))
-            so.getHandlocation()
-            so.getWoodlocation()
-
-            q.put(so.getHandlocationX())
-            q.put(so.getHandlocationY())
-            q.put(so.getHandlocationZ())
-            q.put(so.getWoodlocationX())
-            q.put(so.getWoodlocationY())
-            q.put(so.getWoodlocationZ())
-            
         self.Nowstep = self.Nowstep + 1
         self.exp_action = action_index
-
-        self.q.put(self.exp_action)
-
-        ps = Process(target = Armstep, args = (self.q, self.ind, self.so))
-        ps.start()
-        ps.join()
-        ps.terminate()
-        ps.join()
-        #print(self.Nowstep)
-
-
+        self.arr[1] = action_index
+        self.num.value = 2.0
         self.exp_state1 = []
-        for i in range(0, 6):
-            self.exp_state1.append(self.q.get())
+        while True:
+            time.sleep(0.1)
+            if self.num.value == 1.0:
+                for i in range(2, 8):
+                    self.exp_state1.append(self.arr[i])
+                break
 
-        #print(self.q.empty())
+        print(self.Nowstep)
+
         reward1 = abs(self.exp_state1[0] - self.exp_state1[3])
         reward2 = abs(self.exp_state1[1] - self.exp_state1[4])
         reward3 = abs(self.exp_state1[2] - self.exp_state1[5])
         reward = 10000 / (1 + reward1 + reward2 + reward3)
-        #print(self.exp_state1[0], self.exp_state1[1], self.exp_state1[2], self.exp_state1[3], self.exp_state1[4], self.exp_state1[5])
-        #print(reward)
+        print(self.exp_state1[0], self.exp_state1[1], self.exp_state1[2], self.exp_state1[3], self.exp_state1[4], self.exp_state1[5])
+        print(reward)
 
         self.exp_reward = reward
 
-        if self.Nowstep > 600:
+        if self.Nowstep > 400:
             self.exp_terminal1 = True
-
 
         return self._get_experience()
