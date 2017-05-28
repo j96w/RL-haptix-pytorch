@@ -12,6 +12,12 @@ import sys
 import math
 from time import sleep
 
+import string
+import matplotlib.pyplot as plt
+import Image
+sys.modules['Image'] = Image
+import socket
+
 from utils.helpers import Experience            # NOTE: here state0 is always "None"
 from utils.helpers import preprocessAtari, rgb2gray, rgb2y, scale
 
@@ -257,19 +263,28 @@ class ArmEnv(Env):
             new_arm_env = os.environ.copy()
             new_arm_env['GAZEBO_MASTER_URI'] = 'http://127.0.0.1:1123' + str(env_ind)
             new_arm_env['IGN_PARTITION'] = 'arm' + str(env_ind)
-
-            new_ctrl_env = os.environ.copy()
-            new_ctrl_env['IGN_PARTITION'] = 'arm' + str(env_ind)
+            new_arm_env['IGN_PARTITION_PORT'] = '2333' + str(env_ind)
 
             subprocess.Popen(['gazebo', 'worlds/arat.world'], env = new_arm_env)
             sleep(20)
 
-            def armCtrl(n,a):
+            def armCtrl(n, iS, a):
                 so = ctypes.CDLL(self.root_dir + '/libarmctl.so')
                 os.environ['IGN_PARTITION'] = 'arm' + str(a[0])
+                os.environ['IGN_PARTITION_PORT'] = '2333' + str(a[0])
+
+                host = '127.0.0.1'
+                port = int('2333' + str(a[0]))
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.bind((host,port))
+                s.listen(1)
+                conn, addr = s.accept()
+                data = ''
+
                 so.l_armstart()
 
                 while True:
+                    print("ahhahhaha")
                     time.sleep(0.1)
                     if n.value == 2.0:
                         if a[1] == 0:
@@ -293,7 +308,16 @@ class ArmEnv(Env):
                         a[5] = so.getWoodlocationX()
                         a[6] = so.getWoodlocationY()
                         a[7] = so.getWoodlocationZ()
-                        n.value = 1
+
+                        while 1:
+                            data = conn.recv(211680)
+                            if not data:
+                                continue
+                            else:
+                                break
+                        iS.value = data
+
+                        n.value = 1.0
 
                     if n.value == 3.0:
                         so.l_reset()
@@ -306,12 +330,22 @@ class ArmEnv(Env):
                         a[5] = so.getWoodlocationX()
                         a[6] = so.getWoodlocationY()
                         a[7] = so.getWoodlocationZ()
-                        n.value = 1
+
+                        while 1:
+                            data = conn.recv(211680)
+                            if not data:
+                                continue
+                            else:
+                                break
+                        iS.value = data
+                        print(data)
+                        n.value = 1.0
 
             self.num = Value('d', 0.0)
+            self.imgString = Value('c', ' ')
             self.arr = Array('i',range(10))
-            self.arr[1] = env_ind
-            p = Process(target=armCtrl, args=(self.num, self.arr))
+            self.arr[0] = env_ind
+            p = Process(target=armCtrl, args=(self.num, self.imgString, self.arr))
             p.start()
         #assert self.env_type == "arm"
 
@@ -368,11 +402,22 @@ class ArmEnv(Env):
         self.Nowstep = 0
         self.num.value = 3.0
         self.exp_state1 = []
+        self.locat = []
+
         while True:
             time.sleep(0.1)
             if self.num.value == 1.0:
                 for i in range(2, 8):
-                    self.exp_state1.append(self.arr[i])
+                    self.locat.append(self.arr[i])
+                for i in range(42):
+                    for j in range(42):
+                        s1 = self.imgString.value[3*(i*42+j)]
+                        h1 = ord(s1)
+                        s2 = self.imgString.value[3*(i*42+j)+1]
+                        h2 = ord(s2)
+                        s3 = self.imgString.value[3*(i*42+j)+2]
+                        h3 = ord(s3)
+                        self.exp_state1.append((h1 * 0.299 + h2 * 0.587 + h3 * 0.114))
                 break
 
         return self._get_experience()
@@ -385,21 +430,36 @@ class ArmEnv(Env):
         self.arr[1] = action_index
         self.num.value = 2.0
         self.exp_state1 = []
+        self.locat = []
+
         while True:
             time.sleep(0.1)
             if self.num.value == 1.0:
                 for i in range(2, 8):
-                    self.exp_state1.append(self.arr[i])
+                    self.locat.append(self.arr[i])
+                for i in range(42):
+                    for j in range(42):
+                        s1 = self.imgString.value[3*(i*42+j)]
+                        h1 = ord(s1)
+                        s2 = self.imgString.value[3*(i*42+j)+1]
+                        h2 = ord(s2)
+                        s3 = self.imgString.value[3*(i*42+j)+2]
+                        h3 = ord(s3)
+                        self.exp_state1.append((h1 * 0.299 + h2 * 0.587 + h3 * 0.114))
                 break
 
-        print(self.Nowstep)
+        #print(self.Nowstep)
 
-        reward1 = abs(self.exp_state1[0] - self.exp_state1[3])
-        reward2 = abs(self.exp_state1[1] - self.exp_state1[4])
-        reward3 = abs(self.exp_state1[2] - self.exp_state1[5])
-        reward = 10000 / (1 + reward1 + reward2 + reward3)
-        print(self.exp_state1[0], self.exp_state1[1], self.exp_state1[2], self.exp_state1[3], self.exp_state1[4], self.exp_state1[5])
-        print(reward)
+        r1 = abs(self.locat[0] - self.locat[3])
+        r2 = abs(self.locat[1] - self.locat[4])
+        r3 = abs(self.locat[2] - self.locat[5])
+        reward = 0
+        if ((r1 + r2 + r3) < 50):
+            reward = 1000 / (1 + r1 + r2 + r3)
+        if ((r1 + r2 + r3) > 200):
+            reward = - (r1 + r2 + r3) / 10
+        #print(self.exp_state1[0], self.exp_state1[1], self.exp_state1[2], self.exp_state1[3], self.exp_state1[4], self.exp_state1[5])
+        #print(reward)
 
         self.exp_reward = reward
 

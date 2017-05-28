@@ -11,16 +11,14 @@
         <pose>0 -0.6 1.3  0 0.4 1.57</pose>
       </camera>
 
-    
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <default_size>25 25</default_size>
         <force_min>0.001</force_min>
-        <force_max>20</force_max>
+        <force_max>2000</force_max>
         <color_no_contact>255 255 255 0</color_no_contact>
         <color_max>255 0 0 255</color_max>
         <color_min>255 227 32 255</color_min>
         <hand_side>right</hand_side>
-        <timer_topic>~/timer_control</timer_topic>
 
         <contacts>
           <contact name="mpl::rPalm0">
@@ -265,7 +263,7 @@
     </gui>
 
    <physics type="ode">
-      <gravity>0.000000 0.000000 -9.810000</gravity>
+      <gravity>0.000000 0.000000 -9.800000</gravity>
       <ode>
         <solver>
           <type>quick</type>
@@ -350,25 +348,12 @@
 
     <include>
      <uri>model://mpl_haptix_right_forearm</uri>
-     <pose>0.4 -0.7 1.2 0 0 3.1416</pose>
-     <!--<plugin name="hello_world" filename="libhello_world.so"/>-->
+     <pose>0.24 -0.90 1.02 0 0 3.1416</pose>
     </include>
-    <!--<model name="hehe">
-     <include>
-      <uri>model://mpl_haptix_right_forearm</uri>
-      <pose>0.4 -0.7 1.2 0 0 3.1416</pose>
-     </include>
-     <plugin name="hello_world" filename="libhello_world.so"/>
-    </model>-->
-
-    
-      <!--<topic_name>~/pose/info</topic_name>
-      <model_name>mpl_haptix_right_forearm</model_name>
-    </plugin>-->
 
     <model name='camera'>
       <static>true</static>
-      <pose>0 0 0 0 0 0</pose>
+      <pose>20 170 10 0 0 0</pose>
       <link name='link'>
         <visual name='visual'>
           <geometry>
@@ -379,13 +364,13 @@
         </visual>
         <sensor name='my_camera' type='camera'>
           <camera>
-            <save enabled="true">
+            <save enabled="false">
               <path>/tmp/camera_save_tutorial</path>
             </save>
             <horizontal_fov>1.047</horizontal_fov>
             <image>
-              <width>64</width>
-              <height>64</height>
+              <width>42</width>
+              <height>42</height>
             </image>
             <clip>
               <near>0.01</near>
@@ -393,9 +378,11 @@
             </clip>
           </camera>
           <always_on>1</always_on>
-          <update_rate>120</update_rate>
+          <update_rate>1</update_rate>
+          <plugin name="hello_world" filename="libhello_world.so"/>
         </sensor>
       </link>
+      
     </model>
 
 
@@ -446,23 +433,10 @@
       <pose> 0.0 250 1.015 0 0 0</pose>
     </include>
 
-
-    
     <include>
-       <uri>model://wood_cube_5cm</uri>
-       <pose>-0.2 250 1.015 0 0 0</pose>
-       <!--<plugin name="hello_world1" filename="libhello_world1.so"/>-->
+      <uri>model://wood_cube_5cm</uri>
+      <pose>-0.2 250 1.015 0 0 0</pose>
     </include>
-
-    <!--<model name="wood_cube_5cm">
-     <include>
-       <uri>model://wood_cube_5cm</uri>
-       <pose>-0.2 250 1.015 0 0 0</pose>
-     </include>
-     <plugin name="hello_world1" filename="libhello_world1.so"/>
-    </model>
--->
-    
 
     <include>
       <uri>model://wood_cube_2_5cm</uri>
@@ -641,7 +615,6 @@
       <pivot>0.04 0 0</pivot>
       <grab>0.12 0 0</grab>
     </plugin>
-
 
   </world>
 </sdf>

@@ -23,6 +23,18 @@ hxsVector3 p;
 hxRobotInfo robotInfo;
 hxCommand cmd;
 hxSensor sensor;
+float handx = 0.0;
+float handy = 0.0;
+float handz = 0.0;
+float woodx = 0.0;
+float woody = 0.0;
+float woodz = 0.0;
+float resetHandx = 0.24;
+float resetHandy = -0.90;
+float resetHandz = 1.31;
+float resetWoodx = 0.21;
+float resetWoody = -0.28;
+float resetWoodz = 1.03;
 
 
 void sigHandler(int signo)
@@ -48,8 +60,58 @@ int l_armstart()
     printf("Error catching SIGTERM\n");
     return -1;
   }
+
   return 1;
 }
+
+
+
+int l_reset()
+{
+	if(resetHandx < 0.44)
+	{
+		resetHandx += 0.02;
+	}	
+	else
+	{
+		resetHandx = 0.04;
+	}
+	hxsSimInfo *info;
+	info = (hxsSimInfo*)malloc(sizeof(hxsSimInfo));
+	hxsTransform pt;
+	hxs_sim_info(info);
+	int i, n = info->model_count;
+	for(i = 0; i < n; i++)
+	{
+		if(info->models[i].name[0] == 'm' && info->models[i].name[1] == 'p'){
+			pt = info->models[i].transform;
+			pt.pos.x = resetHandx;
+		 	pt.pos.y = resetHandy;
+			pt.pos.z = resetHandz;
+			pt.orient.x = 0.0;
+			pt.orient.y = 0.0;
+			pt.orient.z = 3.1416;
+
+		}
+	}
+	hxs_set_model_transform("mpl_haptix_right_forearm", &pt);
+	for(i = 0; i < n; i++)
+	{
+		if(info->models[i].name[0] == 'w' && info->models[i].name[10] == '5'){
+			pt = info->models[i].transform;
+			pt.pos.x = resetWoodx;
+			pt.pos.y = resetWoody;
+			pt.pos.z = resetWoodz;
+			pt.orient.x = 0.0;
+			pt.orient.y = 0.0;
+			pt.orient.z = 0.0;
+		}
+	}
+	hxs_set_model_transform("wood_cube_5cm", &pt);
+	free(info);
+	return 0;
+}
+
 
 
 int update()
@@ -141,20 +203,14 @@ int l_handTurn(double angle)
 }
 
 
-int l_finger1(double angle)
+int l_finger1down(double angle)
 {
     int i;
+    cmd.ref_pos[3] = 250;
+    //cmd.ref_pos[4] = angle;
+    //cmd.ref_pos[5] = angle;      
     for (i = 0; i < robotInfo.motor_count; ++i)
     {
-	if(i == 3){
-		cmd.ref_pos[i] = 150;
-	}
-	if(i == 4){
-		cmd.ref_pos[i] = angle;
-	}
-	if(i == 5){
-		cmd.ref_pos[i] = angle;
-	}
 	cmd.ref_vel[i] = 1.0;
     }
     cmd.ref_vel_enabled = 1;
@@ -171,11 +227,11 @@ int l_finger1(double angle)
 int l_finger2down(double angle)
 {
     int i;
+    cmd.ref_pos[8] = angle;
+    cmd.ref_pos[9] = angle;
+    cmd.ref_pos[10] = angle;
     for (i = 0; i < robotInfo.motor_count; ++i)
-    {
-	if(i == 8){
-		cmd.ref_pos[i] = angle;
-	}
+    {	
 	cmd.ref_vel[i] = 1.0;
     }
     cmd.ref_vel_enabled = 1;
@@ -191,11 +247,9 @@ int l_finger2down(double angle)
 int l_finger3down(double angle)
 {
     int i;
+    cmd.ref_pos[11] = angle;
     for (i = 0; i < robotInfo.motor_count; ++i)
     {
-	if(i == 9){
-		cmd.ref_pos[i] = angle;
-	}
 	cmd.ref_vel[i] = 1.0;
     }
     cmd.ref_vel_enabled = 1;
@@ -208,49 +262,6 @@ int l_finger3down(double angle)
     return 0;
 }
 
-int l_finger4down(double angle)
-{
-    int i;
-    for (i = 0; i < robotInfo.motor_count; ++i)
-    {
-	if(i == 10){
-		cmd.ref_pos[i] = angle;
-	}
-	cmd.ref_vel[i] = 1.0;
-    }
-    cmd.ref_vel_enabled = 1;
-    cmd.ref_pos_enabled = 1;
-    if(update() < 0)
-    {
-      printf("update failed\n");
-      return -1;
-    }
-    return 0;
-}
-
-int l_fingerdown(double angle1, double angle2, double angle3)
-{
-    int i;
-    cmd.ref_pos[3] = 150;
-    cmd.ref_pos[4] = angle1;
-    cmd.ref_pos[5] = angle1;
-    cmd.ref_pos[8] = angle2;
-    cmd.ref_pos[9] = angle2;
-    cmd.ref_pos[10] = angle2;
-    cmd.ref_pos[12] = angle3;
-    for (i = 0; i < robotInfo.motor_count; ++i)
-    {
-	cmd.ref_vel[i] = 1.0;
-    }
-    cmd.ref_vel_enabled = 1;
-    cmd.ref_pos_enabled = 1;
-    if(update() < 0)
-    {
-      printf("update failed\n");
-      return -1;
-    }
-    return 0;
-}
 
 
 int l_left()
@@ -264,7 +275,7 @@ int l_left()
 	{
 		if(info -> models[i].name[0] == 'm' && info->models[i].name[1] == 'p'){
 			pt = info->models[i].transform;
-			pt.pos.x -= 0.02;
+			pt.pos.x -= 0.005;
 		}
 	}
 	free(info);
@@ -272,6 +283,8 @@ int l_left()
 	
 	return 0;
 }
+
+
 
 int l_right()
 {
@@ -284,7 +297,7 @@ int l_right()
 	{
 		if(info -> models[i].name[0] == 'm' && info->models[i].name[1] == 'p'){
 			pt = info->models[i].transform;
-			pt.pos.x += 0.02;
+			pt.pos.x += 0.005;
 		}
 	}
 	free(info);
@@ -294,8 +307,90 @@ int l_right()
 }
 
 
+int l_up()
+{
+	hxsSimInfo *info;
+	hxsTransform pt;
+	info = (hxsSimInfo*)malloc(sizeof(hxsSimInfo));
+	hxs_sim_info(info);
+	int i, n = info->model_count;
+	for(i = 0; i < n; i++)
+	{
+		if(info -> models[i].name[0] == 'm' && info->models[i].name[1] == 'p'){
+			pt = info->models[i].transform;
+			pt.pos.z += 0.010;
+		}
+	}
+	free(info);
+	hxs_set_model_transform("mpl_haptix_right_forearm", &pt);
+	
+	return 0;
+}
 
-int getlocation()
+int l_down()
+{
+	hxsSimInfo *info;
+	hxsTransform pt;
+	info = (hxsSimInfo*)malloc(sizeof(hxsSimInfo));
+	hxs_sim_info(info);
+	int i, n = info->model_count;
+	for(i = 0; i < n; i++)
+	{
+		if(info -> models[i].name[0] == 'm' && info->models[i].name[1] == 'p'){
+			pt = info->models[i].transform;
+			pt.pos.z -= 0.002;
+		}
+	}
+	free(info);
+	hxs_set_model_transform("mpl_haptix_right_forearm", &pt);
+	
+	return 0;
+}
+
+
+int l_in()
+{
+	hxsSimInfo *info;
+	hxsTransform pt;
+	info = (hxsSimInfo*)malloc(sizeof(hxsSimInfo));
+	hxs_sim_info(info);
+	int i, n = info->model_count;
+	for(i = 0; i < n; i++)
+	{
+		if(info -> models[i].name[0] == 'm' && info->models[i].name[1] == 'p'){
+			pt = info->models[i].transform;
+			pt.pos.y += 0.005;
+		}
+	}
+	free(info);
+	hxs_set_model_transform("mpl_haptix_right_forearm", &pt);
+	
+	return 0;
+}
+
+
+int l_out()
+{
+	hxsSimInfo *info;
+	hxsTransform pt;
+	info = (hxsSimInfo*)malloc(sizeof(hxsSimInfo));
+	hxs_sim_info(info);
+	int i, n = info->model_count;
+	for(i = 0; i < n; i++)
+	{
+		if(info -> models[i].name[0] == 'm' && info->models[i].name[1] == 'p'){
+			pt = info->models[i].transform;
+			pt.pos.y -= 0.005;
+		}
+	}
+	free(info);
+	hxs_set_model_transform("mpl_haptix_right_forearm", &pt);
+	
+	return 0;
+}
+
+
+int getHandlocation()
 {
 	hxsSimInfo *info;
 	info = (hxsSimInfo*)malloc(sizeof(hxsSimInfo));
@@ -305,15 +400,41 @@ int getlocation()
 	{
 		if(info->models[i].name[0] == 'm' && info->models[i].name[1] == 'p'){
 			p = info->models[i].transform.pos;
+			handx = p.x;
+			handy = p.y;
+			handz = p.z;
 		}
 	}
 	free(info);
 	return 0;
 }
 
-float getlocationX(){return p.x;}
-float getlocationY(){return p.y;}
-float getlocationZ(){return p.z;}
+int getWoodlocation()
+{
+	hxsSimInfo *info;
+	info = (hxsSimInfo*)malloc(sizeof(hxsSimInfo));
+	hxs_sim_info(info);
+	int i, n = info->model_count;
+	for(i = 0; i < n; i++)
+	{
+		if(info->models[i].name[0] == 'w' && info->models[i].name[10] == '5'){
+			p = info->models[i].transform.pos;
+			woodx = p.x;
+			woody = p.y;
+			woodz = p.z;
+	
+		}
+	}
+	free(info);
+	return 0;
+}
+
+int getHandlocationX(){return (int)(handx * 100);}
+int getHandlocationY(){return (int)(handy * 100 + 60);}
+int getHandlocationZ(){return (int)(handz * 100);}
+int getWoodlocationX(){return (int)(woodx * 100);}
+int getWoodlocationY(){return (int)(woody * 100);}
+int getWoodlocationZ(){return (int)(woodz * 100);}
 
 int l_forceget0()
 {return sensor.contact[0];}

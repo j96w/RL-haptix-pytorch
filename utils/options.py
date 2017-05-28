@@ -56,16 +56,16 @@ class Params(object):   # NOTE: shared across all modules
             self.dtype              = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
         elif self.agent_type == "a3c":
             self.enable_lstm        = False
-            self.num_processes      = 3
+            self.num_processes      = 1
 
             self.hist_len           = 1
-            self.hidden_dim         = 6
+            self.hidden_dim         = 128
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
         else:
             self.hist_len           = 1
-            self.hidden_dim         = 6
+            self.hidden_dim         = 256
 
             self.use_cuda           = torch.cuda.is_available()
             self.dtype              = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
@@ -109,9 +109,9 @@ class EnvParams(Params):    # settings for simulation environment
         elif self.env_type == "lab":
             pass
         elif self.env_type == "arm":
-            self.hei_state = 1
-            self.wid_state = 6
-            self.preprocess_mode = 0
+            self.hei_state = 42
+            self.wid_state = 42
+            self.preprocess_mode = 3
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | arm"
 
@@ -208,8 +208,8 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.gamma               = 0.99
             self.clip_grad           = 40.
             self.lr                  = 0.0001
-            self.eval_freq           = 1000       # NOTE: here means every this many seconds
-            self.eval_steps          = 500
+            self.eval_freq           = 300       # NOTE: here means every this many seconds
+            self.eval_steps          = 1200
             self.prog_freq           = self.eval_freq
             self.test_nepisodes      = 1
 
@@ -221,8 +221,8 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.gamma               = 0.99
             self.clip_grad           = 1.#np.inf
             self.lr                  = 0.001
-            self.eval_freq           = 2500     # NOTE: here means every this many steps
-            self.eval_steps          = 1000
+            self.eval_freq           = 60     # NOTE: here means every this many steps
+            self.eval_steps          = 500
             self.prog_freq           = self.eval_freq
             self.test_nepisodes      = 10
 
