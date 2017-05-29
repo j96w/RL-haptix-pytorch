@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import cv2
 from collections import namedtuple
+import scipy.misc
 
 def loggerConfig(log_file, verbose=2):
    logger      = logging.getLogger()
@@ -31,12 +32,14 @@ Experience          = namedtuple('Experience',          'state0, action, reward,
 AugmentedExperience = namedtuple('AugmentedExperience', 'state0, action, reward, state1, terminal1, policy_vb, value0_vb')
 
 def preprocessAtari(frame):
-    frame = frame[34:34 + 160, :160]
-    frame = cv2.resize(frame, (80, 80))
+    #frame = frame[34:34 + 160, :160]
+    #frame = cv2.resize(frame, (80, 80))
     frame = cv2.resize(frame, (42, 42))
-    frame = frame.mean(2)
+    #frame = frame.mean(2)
     frame = frame.astype(np.float32)
-    frame*= (1. / 255.)
+    #frame*= (1. / 255.)
+    #print(frame)
+    #scipy.misc.imsave('/home/jeremywang/Untitled Folder/outfile.jpg', frame)
     return frame
 
 # TODO: check the order rgb to confirm

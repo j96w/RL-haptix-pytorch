@@ -47,19 +47,19 @@ namespace gazebo
     	   std::cout << "[ERROR] Python get module failed.\n";
      	   return;
    		}
-		std::cout << "succeed get module\n";
+		//std::cout << "succeed get module\n";
 		pyFunc = PyObject_GetAttrString(pyMod,"reimg");//get function
 
   	 	if (!pyFunc || !PyCallable_Check(pyFunc)){
 		    std::cout << "[ERROR] Can't find funftion (test_add)\n";
 		    return;
 		}
-		std::cout << "succeed find fun\n";
+		//std::cout << "succeed find fun\n";
 		pyParams = PyTuple_New(1);
 		PyTuple_SetItem(pyParams,0,PyString_FromString(str2.c_str()));
 		PyObject_CallObject(pyFunc,pyParams);//call function
 	
-		std::cout << "end of one img\n";
+		//std::cout << "end of one img\n";
 }
 
     private: int saveCount;

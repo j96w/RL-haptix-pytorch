@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 import numpy as np
 from copy import deepcopy
+import torch
 
 from multiprocessing import Process, Queue, Value, Array
 from ctypes import cdll, c_int, byref, c_float
@@ -265,16 +266,13 @@ class ArmEnv(Env):
             new_arm_env['IGN_PARTITION'] = 'arm' + str(env_ind)
             new_arm_env['IGN_PARTITION_PORT'] = '2333' + str(env_ind)
 
-            subprocess.Popen(['gazebo', 'worlds/arat.world'], env = new_arm_env)
-            sleep(20)
-
-            def armCtrl(n, iS, a):
+            def armCtrl(n, a):
                 so = ctypes.CDLL(self.root_dir + '/libarmctl.so')
-                os.environ['IGN_PARTITION'] = 'arm' + str(a[0])
-                os.environ['IGN_PARTITION_PORT'] = '2333' + str(a[0])
+                os.environ['IGN_PARTITION'] = 'arm' + str(int(a[0]))
+                os.environ['IGN_PARTITION_PORT'] = '2333' + str(int(a[0]))
 
                 host = '127.0.0.1'
-                port = int('2333' + str(a[0]))
+                port = int('2333' + str(int(a[0])))
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.bind((host,port))
                 s.listen(1)
@@ -284,8 +282,8 @@ class ArmEnv(Env):
                 so.l_armstart()
 
                 while True:
-                    print("ahhahhaha")
                     time.sleep(0.1)
+                    data = ''
                     if n.value == 2.0:
                         if a[1] == 0:
                             so.l_up()
@@ -309,14 +307,22 @@ class ArmEnv(Env):
                         a[6] = so.getWoodlocationY()
                         a[7] = so.getWoodlocationZ()
 
-                        while 1:
-                            data = conn.recv(211680)
-                            if not data:
-                                continue
-                            else:
-                                break
-                        iS.value = data
 
+                        while 1:
+                            data = conn.recv(8000)
+                            if len(data) == 8000:
+                                break
+                        now = 10;
+                        for i in range(42):
+                            for j in range(42):
+                                s1 = data[3*(i*42+j)]
+                                h1 = ord(s1)
+                                s2 = data[3*(i*42+j)+1]
+                                h2 = ord(s2)
+                                s3 = data[3*(i*42+j)+2]
+                                h3 = ord(s3)
+                                a[now] = (h1 * 0.299 + h2 * 0.587 + h3 * 0.114)
+                                now = now + 1
                         n.value = 1.0
 
                     if n.value == 3.0:
@@ -332,21 +338,31 @@ class ArmEnv(Env):
                         a[7] = so.getWoodlocationZ()
 
                         while 1:
-                            data = conn.recv(211680)
-                            if not data:
-                                continue
-                            else:
+                            data = conn.recv(8000)
+                            if len(data) == 8000:
                                 break
-                        iS.value = data
-                        print(data)
+
+                        now = 10;
+                        for i in range(42):
+                            for j in range(42):
+                                s1 = data[3*(i*42+j)]
+                                h1 = ord(s1)
+                                s2 = data[3*(i*42+j)+1]
+                                h2 = ord(s2)
+                                s3 = data[3*(i*42+j)+2]
+                                h3 = ord(s3)
+                                a[now] = int((h1 * 0.299 + h2 * 0.587 + h3 * 0.114))
+                                now = now + 1
                         n.value = 1.0
 
             self.num = Value('d', 0.0)
-            self.imgString = Value('c', ' ')
-            self.arr = Array('i',range(10))
+            self.arr = Array('f',range(2000))
             self.arr[0] = env_ind
-            p = Process(target=armCtrl, args=(self.num, self.imgString, self.arr))
+            p = Process(target=armCtrl, args=(self.num, self.arr))
             p.start()
+
+            subprocess.Popen(['gazebo', 'worlds/arat.world'], env = new_arm_env)
+            sleep(20)
         #assert self.env_type == "arm"
 
         #self.env = gym.make(self.game)
@@ -401,24 +417,21 @@ class ArmEnv(Env):
         self._reset_experience()
         self.Nowstep = 0
         self.num.value = 3.0
-        self.exp_state1 = []
+        b = []
         self.locat = []
-
+        now = 0
         while True:
             time.sleep(0.1)
             if self.num.value == 1.0:
                 for i in range(2, 8):
-                    self.locat.append(self.arr[i])
-                for i in range(42):
-                    for j in range(42):
-                        s1 = self.imgString.value[3*(i*42+j)]
-                        h1 = ord(s1)
-                        s2 = self.imgString.value[3*(i*42+j)+1]
-                        h2 = ord(s2)
-                        s3 = self.imgString.value[3*(i*42+j)+2]
-                        h3 = ord(s3)
-                        self.exp_state1.append((h1 * 0.299 + h2 * 0.587 + h3 * 0.114))
+                    self.locat.append(int(self.arr[i]))
+                for i in range(10, 1774):
+                    b.append(float(self.arr[i]))
+                    now = now + 1
                 break
+        self.exp_state1 = np.array(b)
+
+
 
         return self._get_experience()
 
@@ -429,26 +442,22 @@ class ArmEnv(Env):
         self.exp_action = action_index
         self.arr[1] = action_index
         self.num.value = 2.0
-        self.exp_state1 = []
+        b = []
         self.locat = []
-
+        now = 0
         while True:
             time.sleep(0.1)
             if self.num.value == 1.0:
                 for i in range(2, 8):
-                    self.locat.append(self.arr[i])
-                for i in range(42):
-                    for j in range(42):
-                        s1 = self.imgString.value[3*(i*42+j)]
-                        h1 = ord(s1)
-                        s2 = self.imgString.value[3*(i*42+j)+1]
-                        h2 = ord(s2)
-                        s3 = self.imgString.value[3*(i*42+j)+2]
-                        h3 = ord(s3)
-                        self.exp_state1.append((h1 * 0.299 + h2 * 0.587 + h3 * 0.114))
+                    self.locat.append(int(self.arr[i]))
+                for i in range(10, 1774):
+                    b.append(float(self.arr[i]))
+                    now = now + 1
                 break
+        self.exp_state1 = np.array(b)
 
-        #print(self.Nowstep)
+
+        print(self.Nowstep)
 
         r1 = abs(self.locat[0] - self.locat[3])
         r2 = abs(self.locat[1] - self.locat[4])

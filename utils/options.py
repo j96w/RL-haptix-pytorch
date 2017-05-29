@@ -59,7 +59,7 @@ class Params(object):   # NOTE: shared across all modules
             self.num_processes      = 1
 
             self.hist_len           = 1
-            self.hidden_dim         = 128
+            self.hidden_dim         = 288
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
