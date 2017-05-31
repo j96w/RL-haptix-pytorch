@@ -39,7 +39,7 @@ def preprocessAtari(frame):
     frame = frame.astype(np.float32)
     #frame*= (1. / 255.)
     #print(frame)
-    #scipy.misc.imsave('/home/jeremywang/Untitled Folder/outfile.jpg', frame)
+    #scipy.misc.imsave('/home/jeremywang/Untitled Folder/outfile.bmp', frame)
     return frame
 
 # TODO: check the order rgb to confirm

@@ -12,6 +12,7 @@ import ctypes
 import sys    
 import math
 from time import sleep
+import scipy.misc
 
 import string
 import matplotlib.pyplot as plt
@@ -309,9 +310,15 @@ class ArmEnv(Env):
 
 
                         while 1:
-                            data = conn.recv(8000)
-                            if len(data) == 8000:
+                            data = conn.recv(80000)
+                            print(len(data))
+                            if (len(data) > 5290 and len(data) < 5310):
                                 break
+                            #print(data)
+                            #print(len(data))
+                            #if len(data) == 8000:
+                            #    break
+                        #img = np.array(Image.new("RGB",(42,42),(0, 0, 0)))
                         now = 10;
                         for i in range(42):
                             for j in range(42):
@@ -321,8 +328,13 @@ class ArmEnv(Env):
                                 h2 = ord(s2)
                                 s3 = data[3*(i*42+j)+2]
                                 h3 = ord(s3)
+                                #img[i,j,0] = (h1 * 0.299 + h2 * 0.587 + h3 * 0.114)
+                                #img[i,j,1] = (h1 * 0.299 + h2 * 0.587 + h3 * 0.114)
+                                #img[i,j,2] = (h1 * 0.299 + h2 * 0.587 + h3 * 0.114)
                                 a[now] = (h1 * 0.299 + h2 * 0.587 + h3 * 0.114)
                                 now = now + 1
+                        #plt.imshow(img)
+                        #plt.show()
                         n.value = 1.0
 
                     if n.value == 3.0:
@@ -338,8 +350,9 @@ class ArmEnv(Env):
                         a[7] = so.getWoodlocationZ()
 
                         while 1:
-                            data = conn.recv(8000)
-                            if len(data) == 8000:
+                            data = conn.recv(80000)
+                            print(len(data))
+                            if (len(data) > 5290 and len(data) < 5310):
                                 break
 
                         now = 10;
@@ -462,6 +475,7 @@ class ArmEnv(Env):
         r1 = abs(self.locat[0] - self.locat[3])
         r2 = abs(self.locat[1] - self.locat[4])
         r3 = abs(self.locat[2] - self.locat[5])
+        print(r1, r2, r3)
         reward = 0
         if ((r1 + r2 + r3) < 50):
             reward = 1000 / (1 + r1 + r2 + r3)

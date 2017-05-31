@@ -353,7 +353,7 @@
 
     <model name='camera'>
       <static>true</static>
-      <pose>0.34 -0.50 0.95 0 0 3.1416</pose>
+      <pose>0.94 -0.25 1.08 0 0 3.1416</pose>
       <link name='link'>
         <visual name='visual'>
           <geometry>
@@ -364,7 +364,7 @@
         </visual>
         <sensor name='my_camera' type='camera'>
           <camera>
-            <save enabled="true">
+            <save enabled="false">
               <path>/tmp/camera_save_tutorial</path>
             </save>
             <horizontal_fov>1.047</horizontal_fov>
