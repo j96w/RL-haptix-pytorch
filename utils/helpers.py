@@ -33,13 +33,15 @@ AugmentedExperience = namedtuple('AugmentedExperience', 'state0, action, reward,
 
 def preprocessAtari(frame):
     #frame = frame[34:34 + 160, :160]
-    #frame = cv2.resize(frame, (80, 80))
-    frame = cv2.resize(frame, (42, 42))
+    #frame = cv2.resize(frame, (80, 80)) 
+    #print(frame)
+    frame = cv2.resize(frame, (84, 84))
+    #print(frame)
     #frame = frame.mean(2)
     frame = frame.astype(np.float32)
     #frame*= (1. / 255.)
     #print(frame)
-    #scipy.misc.imsave('/home/jeremywang/Untitled Folder/outfile.bmp', frame)
+    scipy.misc.imsave('/home/jeremywang/Untitled Folder/outfile.bmp', frame)
     return frame
 
 # TODO: check the order rgb to confirm

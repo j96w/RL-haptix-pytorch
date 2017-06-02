@@ -59,7 +59,7 @@ class Params(object):   # NOTE: shared across all modules
             self.num_processes      = 1
 
             self.hist_len           = 1
-            self.hidden_dim         = 288
+            self.hidden_dim         = 256
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
@@ -109,8 +109,8 @@ class EnvParams(Params):    # settings for simulation environment
         elif self.env_type == "lab":
             pass
         elif self.env_type == "arm":
-            self.hei_state = 42
-            self.wid_state = 42
+            self.hei_state = 84
+            self.wid_state = 84
             self.preprocess_mode = 3
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | arm"

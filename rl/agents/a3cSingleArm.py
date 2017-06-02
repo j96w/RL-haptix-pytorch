@@ -156,10 +156,12 @@ class A3CLearner(a3cSingleArm):
         # preparation
         rollout_steps = len(self.rollout.reward)
         action_batch_vb = Variable(torch.from_numpy(np.array(self.rollout.action)).long())
+        #print(action_batch_vb)
         if self.master.use_cuda:
             action_batch_vb = action_batch_vb.cuda()
         policy_vb     = self.rollout.policy_vb
         policy_log_vb = [torch.log(policy_vb[i]) for i in xrange(rollout_steps)]
+        #print(policy_log_vb)
         entropy_vb    = [- (policy_log_vb[i] * policy_vb[i]).sum(1) for i in xrange(rollout_steps)]
         policy_log_vb = [policy_log_vb[i].gather(1, action_batch_vb[i].unsqueeze(0)) for i in xrange(rollout_steps) ]
         valueT_vb     = self._get_valueT_vb()

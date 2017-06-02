@@ -78,7 +78,7 @@ class Env(object):
 
     @property
     def action_dim(self):
-        return 6
+        return 8
 
     def render(self):       # render using the original gl window
         raise NotImplementedError("not implemented in base calss")
@@ -291,13 +291,18 @@ class ArmEnv(Env):
                         if a[1] == 1:
                             so.l_down()
                         if a[1] == 2:
-                            so.l_left()
-                        if a[1] == 3:
                             so.l_right()
+                        if a[1] == 3:
+                            so.l_left()
                         if a[1] == 4:
                             so.l_in()
                         if a[1] == 5:
                             so.l_out()
+                        if a[1] == 6:
+                            so.l_catch()
+                        if a[1] == 7:
+                            so.l_decatch()
+
                         so.getHandlocation()
                         so.getWoodlocation()
 
@@ -311,27 +316,24 @@ class ArmEnv(Env):
 
                         while 1:
                             data = conn.recv(80000)
-                            print(len(data))
-                            if (len(data) > 5290 and len(data) < 5310):
+                            #print(len(data))
+                            if (len(data) > 21100 and len(data) < 21200):
                                 break
                             #print(data)
                             #print(len(data))
                             #if len(data) == 8000:
                             #    break
-                        #img = np.array(Image.new("RGB",(42,42),(0, 0, 0)))
+                        #img = np.array(Image.new("RGB",(84,84),(0, 0, 0)))
                         now = 10;
-                        for i in range(42):
-                            for j in range(42):
-                                s1 = data[3*(i*42+j)]
+                        for i in range(84):
+                            for j in range(84):
+                                s1 = data[3 * (i * 84 + j)]
                                 h1 = ord(s1)
-                                s2 = data[3*(i*42+j)+1]
+                                s2 = data[3 * (i * 84 + j) + 1]
                                 h2 = ord(s2)
-                                s3 = data[3*(i*42+j)+2]
+                                s3 = data[3 * (i * 84 + j) + 2]
                                 h3 = ord(s3)
-                                #img[i,j,0] = (h1 * 0.299 + h2 * 0.587 + h3 * 0.114)
-                                #img[i,j,1] = (h1 * 0.299 + h2 * 0.587 + h3 * 0.114)
-                                #img[i,j,2] = (h1 * 0.299 + h2 * 0.587 + h3 * 0.114)
-                                a[now] = (h1 * 0.299 + h2 * 0.587 + h3 * 0.114)
+                                a[now] = int((h1 * 0.299 + h2 * 0.587 + h3 * 0.114))
                                 now = now + 1
                         #plt.imshow(img)
                         #plt.show()
@@ -351,25 +353,25 @@ class ArmEnv(Env):
 
                         while 1:
                             data = conn.recv(80000)
-                            print(len(data))
-                            if (len(data) > 5290 and len(data) < 5310):
+                            #print(len(data))
+                            if (len(data) > 21100 and len(data) < 21200):
                                 break
 
                         now = 10;
-                        for i in range(42):
-                            for j in range(42):
-                                s1 = data[3*(i*42+j)]
+                        for i in range(84):
+                            for j in range(84):
+                                s1 = data[3 * (i * 84 + j)]
                                 h1 = ord(s1)
-                                s2 = data[3*(i*42+j)+1]
+                                s2 = data[3 * (i * 84 + j) + 1]
                                 h2 = ord(s2)
-                                s3 = data[3*(i*42+j)+2]
+                                s3 = data[3 * (i * 84 + j) + 2]
                                 h3 = ord(s3)
                                 a[now] = int((h1 * 0.299 + h2 * 0.587 + h3 * 0.114))
                                 now = now + 1
                         n.value = 1.0
 
             self.num = Value('d', 0.0)
-            self.arr = Array('f',range(2000))
+            self.arr = Array('f',range(8000))
             self.arr[0] = env_ind
             p = Process(target=armCtrl, args=(self.num, self.arr))
             p.start()
@@ -382,7 +384,7 @@ class ArmEnv(Env):
         #self.env.seed(self.seed)    # NOTE: so each env would be different
 
         # action space setup
-        self.actions     = 6
+        self.actions     = 8
         self.logger.warning("Action Space: %s", self.actions)
         # state space setup
         self.hei_state = args.hei_state
@@ -424,12 +426,13 @@ class ArmEnv(Env):
     #        self.frame_ind += 1
 
     def sample_random_action(self):
-        return random.randint(0, 5)
+        return random.randint(0, 7)
 
     def reset(self):
         self._reset_experience()
         self.Nowstep = 0
         self.num.value = 3.0
+        a = []
         b = []
         self.locat = []
         now = 0
@@ -438,11 +441,13 @@ class ArmEnv(Env):
             if self.num.value == 1.0:
                 for i in range(2, 8):
                     self.locat.append(int(self.arr[i]))
-                for i in range(10, 1774):
-                    b.append(float(self.arr[i]))
-                    now = now + 1
+                for i in range(84):
+                    for j in range(84):
+                        b.append(float(self.arr[i * 84 + j + 10]))
+                    a.append(b)
+                    b = []
                 break
-        self.exp_state1 = np.array(b)
+        self.exp_state1 = np.array(a)
 
 
 
@@ -450,11 +455,12 @@ class ArmEnv(Env):
 
 
     def step(self, action_index):
-        #print(self.ind, action_index)
+        print(self.ind, action_index)
         self.Nowstep = self.Nowstep + 1
         self.exp_action = action_index
         self.arr[1] = action_index
         self.num.value = 2.0
+        a = []
         b = []
         self.locat = []
         now = 0
@@ -463,29 +469,42 @@ class ArmEnv(Env):
             if self.num.value == 1.0:
                 for i in range(2, 8):
                     self.locat.append(int(self.arr[i]))
-                for i in range(10, 1774):
-                    b.append(float(self.arr[i]))
-                    now = now + 1
+                for i in range(84):
+                    for j in range(84):
+                        b.append(float(self.arr[i * 84 + j + 10]))
+                    a.append(b)
+                    b = []
                 break
-        self.exp_state1 = np.array(b)
+        self.exp_state1 = np.array(a)
 
 
-        print(self.Nowstep)
+        #print(self.Nowstep)
 
         r1 = abs(self.locat[0] - self.locat[3])
         r2 = abs(self.locat[1] - self.locat[4])
         r3 = abs(self.locat[2] - self.locat[5])
-        print(r1, r2, r3)
+        #print(r1, r2, r3, self.locat[3], self.locat[4], self.locat[5])
         reward = 0
-        if ((r1 + r2 + r3) < 50):
-            reward = 1000 / (1 + r1 + r2 + r3)
+
+        if (r1 < 30) and (r2 < 30) and (r3 < 30):
+            reward = 1
+        if (r1 < 8) and (r2 < 8) and (r3 < 8):
+            reward = 20
         if ((r1 + r2 + r3) > 200):
-            reward = - (r1 + r2 + r3) / 10
+            reward = -10
+        if (self.locat[5] > 110):
+            reward = 400
+
         #print(self.exp_state1[0], self.exp_state1[1], self.exp_state1[2], self.exp_state1[3], self.exp_state1[4], self.exp_state1[5])
         #print(reward)
 
         self.exp_reward = reward
-
+        if (self.locat[3] < 15) or (self.locat[3] > 25):
+            self.exp_terminal1 = True
+        if (self.locat[4] < -32) or (self.locat[4] > -22):
+            self.exp_terminal1 = True
+        if (self.locat[5] < 100) or (self.locat[5] > 150):
+            self.exp_terminal1 = True
         if self.Nowstep > 400:
             self.exp_terminal1 = True
 

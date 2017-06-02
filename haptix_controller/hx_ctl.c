@@ -34,7 +34,7 @@ float resetHandy = -0.90;
 float resetHandz = 1.31;
 float resetWoodx = 0.21;
 float resetWoody = -0.28;
-float resetWoodz = 1.03;
+float resetWoodz = 1.01;
 
 
 void sigHandler(int signo)
@@ -248,6 +248,53 @@ int l_finger3down(double angle)
 {
     int i;
     cmd.ref_pos[11] = angle;
+    for (i = 0; i < robotInfo.motor_count; ++i)
+    {
+	cmd.ref_vel[i] = 1.0;
+    }
+    cmd.ref_vel_enabled = 1;
+    cmd.ref_pos_enabled = 1;
+    if(update() < 0)
+    {
+      printf("update failed\n");
+      return -1;
+    }
+    return 0;
+}
+
+
+int l_catch()
+{
+    int i;
+    cmd.ref_pos[3] = 400;
+    cmd.ref_pos[4] = 400;
+    cmd.ref_pos[8] = 450;
+    cmd.ref_pos[9] = 450;
+    cmd.ref_pos[10] = 450;
+    cmd.ref_pos[12] = 450;
+    for (i = 0; i < robotInfo.motor_count; ++i)
+    {
+	cmd.ref_vel[i] = 1.0;
+    }
+    cmd.ref_vel_enabled = 1;
+    cmd.ref_pos_enabled = 1;
+    if(update() < 0)
+    {
+      printf("update failed\n");
+      return -1;
+    }
+    return 0;
+}
+
+int l_decatch()
+{
+    int i;
+    cmd.ref_pos[3] = 0;
+    cmd.ref_pos[4] = 0;
+    cmd.ref_pos[8] = 0;
+    cmd.ref_pos[9] = 0;
+    cmd.ref_pos[10] = 0;
+    cmd.ref_pos[12] = 0;
     for (i = 0; i < robotInfo.motor_count; ++i)
     {
 	cmd.ref_vel[i] = 1.0;
