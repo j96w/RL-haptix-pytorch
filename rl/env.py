@@ -15,7 +15,7 @@ from time import sleep
 import scipy.misc
 
 import string
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import Image
 sys.modules['Image'] = Image
 import socket
@@ -376,7 +376,7 @@ class ArmEnv(Env):
             p = Process(target=armCtrl, args=(self.num, self.arr))
             p.start()
 
-            subprocess.Popen(['gazebo', 'worlds/arat.world'], env = new_arm_env)
+            subprocess.Popen(['gzserver', 'worlds/arat.world'], env = new_arm_env)
             sleep(20)
         #assert self.env_type == "arm"
 
@@ -455,7 +455,7 @@ class ArmEnv(Env):
 
 
     def step(self, action_index):
-        print(self.ind, action_index)
+        #print(self.ind, action_index)
         self.Nowstep = self.Nowstep + 1
         self.exp_action = action_index
         self.arr[1] = action_index
@@ -486,12 +486,11 @@ class ArmEnv(Env):
         #print(r1, r2, r3, self.locat[3], self.locat[4], self.locat[5])
         reward = 0
 
-        if (r1 < 30) and (r2 < 30) and (r3 < 30):
-            reward = 1
+
         if (r1 < 8) and (r2 < 8) and (r3 < 8):
-            reward = 20
-        if ((r1 + r2 + r3) > 200):
-            reward = -10
+            reward = 1
+        if ((r1 + r2 + r3) > 100):
+            reward = -5
         if (self.locat[5] > 110):
             reward = 400
 

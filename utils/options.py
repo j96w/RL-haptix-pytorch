@@ -56,7 +56,7 @@ class Params(object):   # NOTE: shared across all modules
             self.dtype              = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
         elif self.agent_type == "a3c":
             self.enable_lstm        = False
-            self.num_processes      = 1
+            self.num_processes      = 6
 
             self.hist_len           = 1
             self.hidden_dim         = 256

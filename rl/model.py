@@ -281,26 +281,22 @@ class A3CCnnModel(Model):
 class ArmModel(Model):
     def __init__(self, args):
         super(ArmModel, self).__init__(args)
-        # build model
-        # 0. feature layers
-        # self.conv1 = nn.Conv2d(self.input_dims[0], 32, kernel_size=8, stride=4)
-        # self.rl1   = nn.ReLU()
-        # self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
-        # self.rl2   = nn.ReLU()
-        # self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
-        # self.rl3   = nn.ReLU()
-        # self.fc4   = nn.Linear(64*7*7, self.hidden_dim)
-        # self.rl4   = nn.ReLU()
-        self.conv1 = nn.Conv2d(self.input_dims[0], 32, kernel_size=8, stride=4)
+        self.conv1 = nn.Conv2d(self.input_dims[0], 32, kernel_size=5, stride=1)
         self.rl1   = nn.ReLU()
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.rl2   = nn.ReLU()
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
         self.rl3   = nn.ReLU()
-        self.fc4   = nn.Linear(64*7*7, self.hidden_dim)
+        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
         self.rl4   = nn.ReLU()
+        self.conv5 = nn.Conv2d(64, 64, kernel_size=5, stride=3)
+        self.rl5   = nn.ReLU()
+        self.conv6 = nn.Conv2d(64, 64, kernel_size=4, stride=1)
+        self.rl6   = nn.ReLU()
+        self.fc7   = nn.Linear(64 * 8 * 8, self.hidden_dim)
+        self.rl7   = nn.ReLU()
         if self.enable_lstm:
-            self.lstm  = nn.LSTMCell(3*3*32, self.hidden_dim, 1)
+            self.lstm  = nn.LSTMCell(3 * 3 * 32, self.hidden_dim, 1)
         # 1. policy output
         self.policy_5 = nn.Linear(self.hidden_dim, self.output_dims)
         self.policy_6 = nn.Softmax()
@@ -311,8 +307,8 @@ class ArmModel(Model):
 
     def _init_weights(self):
         self.apply(init_weights)
-        self.fc4.weight.data = normalized_columns_initializer(self.fc4.weight.data, 0.0001)
-        self.fc4.bias.data.fill_(0)
+        self.fc7.weight.data = normalized_columns_initializer(self.fc7.weight.data, 0.0001)
+        self.fc7.bias.data.fill_(0)
         self.policy_5.weight.data = normalized_columns_initializer(self.policy_5.weight.data, 0.01)
         self.policy_5.bias.data.fill_(0)
         self.value_5.weight.data = normalized_columns_initializer(self.value_5.weight.data, 1.0)
@@ -326,8 +322,10 @@ class ArmModel(Model):
         x = self.rl1(self.conv1(x))
         x = self.rl2(self.conv2(x))
         x = self.rl3(self.conv3(x))
-        x = self.rl4(self.fc4(x.view(x.size(0), -1)))
-        #x = x.view(-1, 64*7*7)
+        x = self.rl4(self.conv4(x))
+        x = self.rl5(self.conv5(x))
+        x = self.rl6(self.conv6(x))
+        x = self.rl7(self.fc7(x.view(x.size(0), -1)))
         if self.enable_lstm:
             x, c = self.lstm(x, lstm_hidden_vb)
         p = self.policy_5(x)
