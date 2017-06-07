@@ -16,8 +16,8 @@ import scipy.misc
 
 import string
 #import matplotlib.pyplot as plt
-import Image
-sys.modules['Image'] = Image
+#import Image
+#sys.modules['Image'] = Image
 import socket
 
 from utils.helpers import Experience            # NOTE: here state0 is always "None"
@@ -276,8 +276,10 @@ class ArmEnv(Env):
                 port = int('2333' + str(int(a[0])))
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.bind((host,port))
+
                 s.listen(1)
                 conn, addr = s.accept()
+                #print("aaaaaaaaaa")
                 data = ''
 
                 so.l_armstart()
@@ -376,7 +378,7 @@ class ArmEnv(Env):
             p = Process(target=armCtrl, args=(self.num, self.arr))
             p.start()
 
-            subprocess.Popen(['gzserver', 'worlds/arat.world'], env = new_arm_env)
+            subprocess.Popen(['gzserver','worlds/arat.world'], env = new_arm_env)
             sleep(20)
         #assert self.env_type == "arm"
 
